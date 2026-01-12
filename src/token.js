@@ -14,7 +14,7 @@ function addCountries(url, a, b) {
 	return tempUrl;
 }
 
-function signUrl(url, authKey, expirationTime = 3600, userIp, isDirectory = false, pathAllowed, countriesAllowed, countriesBlocked) {
+function signUrl(url, authKey, expirationTime = 3600, userIp, isDirectory = false, pathAllowed, countriesAllowed, countriesBlocked, ignoreParams = false) {
 	/*
 		url: CDN URL w/o the trailing '/'
 		authKey: authKey for your cdnEndpoint
@@ -24,12 +24,19 @@ function signUrl(url, authKey, expirationTime = 3600, userIp, isDirectory = fals
 		pathAllowed: Directory to authenticate (e.g. /path/to/videos)
 		countriesAllowed: List of countries allowed (e.g. CA, US, TH)
 		countriesBlocked: List of countries blocked (e.g. CA, US, TH)
+		ignoreParams: Optional parameter - if true, adds token_ignore_params=true to ignore query parameters in validation
 	*/
 	var parameterData = "", parameterDataUrl = "", signaturePath = "", hashableBase = "", token = "";
 	var expires = Math.floor(new Date() / 1000) + expirationTime;
 	var url = addCountries(url, countriesAllowed, countriesBlocked);
 	var parsedUrl = new URL(url);
 	var parameters = (new URL(url)).searchParams;
+	
+	if (ignoreParams) {
+		parameters = new URLSearchParams();
+		parameters.set("token_ignore_params", "true");
+	}
+	
 	if (pathAllowed != "") {
 		signaturePath = pathAllowed;
 		parameters.set("token_path", signaturePath);
@@ -50,7 +57,7 @@ function signUrl(url, authKey, expirationTime = 3600, userIp, isDirectory = fals
 			
 		});
 	}
-	hashableBase = authKey + signaturePath + expires + ((userIp != null) ? userIp : "") + parameterData;
+	hashableBase = authKey + signaturePath + expires + parameterData + ((userIp != null) ? userIp : "");
 	token = Buffer.from(crypto.createHash("sha256").update(hashableBase).digest()).toString("base64");
 	token = token.replace(/\n/g, "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 	if (isDirectory) {
