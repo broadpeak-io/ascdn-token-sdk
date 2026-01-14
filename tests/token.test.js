@@ -173,6 +173,38 @@ async function runTests() {
 	await testCdnResponse(baseUrl, 7);
 
 	// ============================================================================
+	// TEST 8: Directory Based Token with ignoreParams=true
+	// ============================================================================
+	printTestHeader(8, "Directory Based Token with ignoreParams=true", "PASS (200 OK)");
+	console.log("\nConfiguration:");
+	console.log("  • Token Type: Directory Based (token in path)");
+	console.log("  • Ignore Params: true (token works with any query parameters)");
+	console.log("  • Countries Allowed: CA, US");
+	console.log("  • Expiration: 7200 seconds (2 hours)");
+	
+	const test8Url = signUrl(baseUrl + "?custom=value&other=param", authKey, 7200, "", true, "/", "CA,US", "", true);
+	console.log(`\nGenerated URL:\n  ${test8Url}`);
+	console.log(`\nExtracted Token:\n  ${extractToken(test8Url)}`);
+	await testCdnResponse(test8Url, 8);
+
+	// ============================================================================
+	// TEST 9: Reuse Directory Based ignoreParams Token with Different Query Params
+	// ============================================================================
+	printTestHeader(9, "Reuse Directory ignoreParams Token with Different Query Params", "PASS (200 OK)");
+	console.log("\nConfiguration:");
+	console.log("  • Reusing directory-based token from Test 8");
+	console.log("  • Changing query parameters to test flexibility");
+	console.log("  • Original params: ?custom=value&other=param");
+	console.log("  • New params: ?brand=new&test=params");
+	
+	const test8Token = extractToken(test8Url);
+	const test8Expires = test8Url.match(/expires=(\d+)/)[1];
+	const test9Url = baseUrl + "?brand=new&test=params&bcdn_token=" + test8Token + "&token_ignore_params=true&token_path=%2F&expires=" + test8Expires;
+	console.log(`\nModified URL:\n  ${test9Url}`);
+	console.log(`\nReused Token:\n  ${test8Token}`);
+	await testCdnResponse(test9Url, 9);
+
+	// ============================================================================
 	// SUMMARY
 	// ============================================================================
 	console.log("\n" + "█".repeat(80));
@@ -191,7 +223,9 @@ async function runTests() {
 			"Reuse Token (diff params)",
 			"Wrong Query Params",
 			"Invalid Token",
-			"No Token"
+			"No Token",
+			"Directory + ignoreParams",
+			"Reuse Dir Token (diff params)"
 		][test.testNum - 1];
 		
 		const statusIcon = test.result === 'PASS' ? '✓' : test.result === 'FAIL' ? '✗' : '⚠';
