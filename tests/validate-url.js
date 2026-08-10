@@ -112,7 +112,11 @@ if (args.noLive) {
 			if (response.status === 200) {
 				console.log("  Result:    ✓ CDN accepted the token");
 			} else if (response.status === 403) {
-				console.log("  Result:    ✗ CDN rejected the token (Forbidden)");
+				console.log("  Result:    ✗ CDN rejected the token (Forbidden — token invalid, expired, geo-blocked, or IP mismatch)");
+			} else if (response.status === 404) {
+				console.log("  Result:    ⚠️  Token accepted but resource not found (404)");
+				console.log("             The token passed authentication, but the file at this path does not exist on the CDN.");
+				console.log("             Check that the resource path is correct: " + result.details.resourcePath);
 			} else {
 				console.log("  Result:    ⚠️  Unexpected status code");
 			}
