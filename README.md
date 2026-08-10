@@ -2,8 +2,9 @@
 
 ## Introduction
 
-This SDK provides two files:
+This SDK provides three files:
 - `./src/token.js`: This file provides functions for generating authentication tokens and can be used freely in your projects.
+- `./src/validate.js`: This file provides a function for validating (verifying) existing tokens from signed URLs.
 - `./tests/token.test.js`: This file provides comprehensive tests and working examples using the `./src/token.js` file.
 
 This has been tested on Node.js versions v20.0.0 and onwards.
@@ -17,6 +18,49 @@ The `token.js` file provides functions to generate signed URLs to be used with b
 - **addCountries(url, countriesAllowed, countriesBlocked)**: Adds allowed and blocked countries as query parameters to the URL.
 
 - **signUrl(url, authKey, expirationTime = 3600, userIp, isDirectory = false, pathAllowed, countriesAllowed, countriesBlocked, ignoreParams = false)**: Generates a signed URL with an authentication token. The token is created using a combination of the URL, authentication key, expiration time, user IP, allowed path, and allowed or blocked countries. When `ignoreParams` is set to `true`, the token will ignore existing query parameters in the URL during validation.
+
+## What `validate.js` does
+
+The `validate.js` file provides a function to verify that an existing token in a signed URL is valid. It works by parsing the token, expiration, path, and parameters from the URL, then recomputing the SHA-256 hash using the same authKey and comparing it to the token in the URL.
+
+### Function
+
+- **validateToken(signedUrl, authKey, userIp)**: Validates a token from a signed URL (both directory-based `bcdn_token` and query-parameter `?token=` formats are supported). Returns `{ valid, reason, details }`.
+
+## Token Validation CLI
+
+A command-line tool is provided in `./tests/validate-url.js` to validate tokens from signed URLs:
+
+```bash
+node tests/validate-url.js --url "<signedUrl>" --authKey "<authKey>" [options]
+```
+
+**Required parameters:**
+
+- `--url, -u <url>`: The signed CDN URL to validate
+- `--authKey, -k <key>`: The authKey (security token) for the CDN endpoint
+
+**Optional parameters:**
+
+- `--userIp, -i <ip>`: User IP address (if IP-locking is enabled on the CDN)
+- `--no-live, -n`: Skip the live CDN HTTP check
+- `--help, -h`: Show help
+
+**Example:**
+
+```bash
+node tests/validate-url.js \
+  -u "https://362a33c2a385d7d1e52d89d1856f40f28b00dd8d.cdn.broadpeak.io/bcdn_token=n7NbxkLsLMivtGFrBTAwuA8jSnx6zHD6Y25c5LoVvlQ&token_ignore_params=true&token_path=%2Frcnnoticias%2F&expires=1786391039/rcnnoticias/manifest.mpd" \
+  -k "08c8d563-bbc7-452a-95c6-99a7856b035c"
+```
+
+The tool performs three checks:
+
+1. **Expiration check** — verifies the token has not expired
+2. **Hash recomputation** — recomputes the SHA-256 hash using the authKey and compares it to the token in the URL
+3. **Live CDN check** — sends an HTTP HEAD request to the CDN and reports the response status (can be skipped with `--no-live`)
+
+The exit code is `0` for valid tokens and `1` for invalid tokens.
 
 ## What token.test.js does
 
