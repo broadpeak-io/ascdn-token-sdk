@@ -104,9 +104,25 @@ if (args.noLive) {
 	(async function liveCheck() {
 		console.log("🌐 Live CDN Check (HTTP HEAD)...");
 		try {
+			var parsedReqUrl = new URL(signedUrl);
+			var requestHeaders = { "Host": parsedReqUrl.host, "Accept": "*/*" };
+
 			var start = Date.now();
-			var response = await fetch(signedUrl, { method: "HEAD", redirect: "follow" });
+			var response = await fetch(signedUrl, { method: "HEAD", redirect: "follow", headers: requestHeaders });
 			var elapsed = Date.now() - start;
+
+			console.log("\n  Request Headers:");
+			console.log("    HEAD " + parsedReqUrl.pathname + parsedReqUrl.search + " HTTP/1.1");
+			Object.entries(requestHeaders).forEach(function ([name, value]) {
+				console.log("    " + name + ": " + value);
+			});
+
+			console.log("\n  Response Headers:");
+			response.headers.forEach(function (value, name) {
+				console.log("    " + name + ": " + value);
+			});
+			console.log("");
+
 			console.log("  Status:    " + response.status + " " + response.statusText);
 			console.log("  Time:      " + elapsed + "ms");
 			if (response.status === 200) {
