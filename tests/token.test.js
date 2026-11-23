@@ -1,9 +1,9 @@
 // Import the token.js file
 
 var { signUrl, addCountries } = require('../src/token.js');
-
-var authKey = "08c8d563-bbc7-452a-95c6-99a7856b035c";
-const baseUrl = "https://362a33c2f033ab37c30201f72321fe6a5ed43cec.cdn.broadpeak.io/Broadpeak_Long.mp4";
+var defaults = require("./token-defaults.js");
+var authKey = defaults.authKey;
+var baseUrl = defaults.baseUrl;
 
 // Test results tracker
 const testResults = [];
@@ -74,7 +74,17 @@ async function runTests() {
 	console.log("  • Expiration: 7200 seconds (2 hours)");
 	console.log("  • Path Allowed: /");
 	
-	const test1Url = signUrl(baseUrl, authKey, 7200, "", false, "/", "CA,US", "JP");
+	const test1Url = signUrl(
+		baseUrl,
+		authKey,
+		defaults.expirationTime,
+		defaults.userIp,
+		defaults.isDirectory,
+		defaults.pathAllowed,
+		defaults.countriesAllowed,
+		defaults.countriesBlocked,
+		defaults.ignoreParams
+	);
 	console.log(`\nGenerated URL:\n  ${test1Url}`);
 	console.log(`\nExtracted Token:\n  ${extractToken(test1Url)}`);
 	await testCdnResponse(test1Url, 1);

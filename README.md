@@ -27,6 +27,25 @@ The `validate.js` file provides a function to verify that an existing token in a
 
 - **validateToken(signedUrl, authKey, userIp)**: Validates a token from a signed URL (both directory-based `bcdn_token` and query-parameter `?token=` formats are supported). Returns `{ valid, reason, details }`.
 
+## Token Generation CLI
+
+Generate a signed URL using the sample URL, authKey, and signing settings from `tests/token.test.js`:
+
+```bash
+node tests/generate-url.js
+```
+
+The checked-in sample authKey is for demonstration only; use your own key for real CDN resources.
+
+For your own CDN URL and authKey:
+
+```bash
+CDN_AUTH_KEY="your-auth-key" node tests/generate-url.js \
+  --url "https://your-cdn.example.com/videos/movie.mp4"
+```
+
+You can also pass the key with `--authKey` (or `-k`). When any arguments are provided, the URL and authKey (or `CDN_AUTH_KEY`) are required. The CLI prints both the signed URL and its token. Use `--help` to see optional settings for expiration, IP, path, country restrictions, directory-based tokens, and ignoring query parameters.
+
 ## Token Validation CLI
 
 A command-line tool is provided in `./tests/validate-url.js` to validate tokens from signed URLs:
